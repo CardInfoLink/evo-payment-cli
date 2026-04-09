@@ -1,0 +1,20 @@
+{
+  "name": "@evopayment/cli",
+  "version": "0.1.0",
+  "description": "Evo Payment CLI — AI Agent interface for Evo Payment APIs",
+  "bin": {
+    "evo-cli": "scripts/run.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/install.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evopayment/evo-cli.git"
+  },
+  "keywords": ["evo-payment", "cli", "payment", "ai-agent"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=14"
+  }
+}

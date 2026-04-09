@@ -1,0 +1,30 @@
+# Binary
+evo-cli
+dist/
+
+# Environment secrets
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+coverage.out
+cover_payment.out
+*.test
+
+# npm
+node_modules/
+bin/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# reference (read-only, copied from another project)
+.kiro
+evopayment-skills/

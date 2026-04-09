@@ -1,0 +1,971 @@
+{
+  "version": "1.0.0",
+  "services": [
+    {
+      "name": "payment",
+      "description": "EC Payment APIs",
+      "resources": {
+        "fxRate": {
+          "methods": {
+            "inquiry": {
+              "httpMethod": "POST",
+              "path": "/g2/v1/payment/mer/{sid}/FXRateInquiry",
+              "description": "FXRateInquiry",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                }
+              },
+              "requestBody": {
+                "localAmount": {
+                  "type": "object",
+                  "required": true
+                },
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": true
+                }
+              }
+            },
+            "query": {
+              "httpMethod": "GET",
+              "path": "/g2/v1/payment/mer/{sid}/FXRateInquiry",
+              "description": "FXRateInquiry",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "baseCurrency": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                },
+                "quoteCurrency": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "online": {
+          "methods": {
+            "cancel": {
+              "httpMethod": "POST",
+              "path": "/g2/v1/payment/mer/{sid}/cancel",
+              "description": "Cancel",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "initiatingReason": {
+                  "type": "string",
+                  "required": false
+                },
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "cancelQuery": {
+              "httpMethod": "GET",
+              "path": "/g2/v1/payment/mer/{sid}/cancel",
+              "description": "Cancel",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              }
+            },
+            "cancelOrRefund": {
+              "httpMethod": "POST",
+              "path": "/g2/v1/payment/mer/{sid}/cancelOrRefund",
+              "description": "Cancel or Refund",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "initiatingReason": {
+                  "type": "string",
+                  "required": false
+                },
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": true
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "cancelOrRefundQuery": {
+              "httpMethod": "GET",
+              "path": "/g2/v1/payment/mer/{sid}/cancelOrRefund",
+              "description": "Cancel or Refund",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              }
+            },
+            "capture": {
+              "httpMethod": "POST",
+              "path": "/g2/v1/payment/mer/{sid}/capture",
+              "description": "Capture",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "initiatingReason": {
+                  "type": "string",
+                  "required": false
+                },
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": true
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "captureQuery": {
+              "httpMethod": "GET",
+              "path": "/g2/v1/payment/mer/{sid}/capture",
+              "description": "Capture",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              }
+            },
+            "pay": {
+              "httpMethod": "POST",
+              "path": "/g2/v1/payment/mer/{sid}/payment",
+              "description": "Payment",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "allowAuthentication": {
+                  "type": "boolean",
+                  "required": false
+                },
+                "allowAvsCheck": {
+                  "type": "boolean",
+                  "required": false
+                },
+                "authentication": {
+                  "type": "object",
+                  "required": false
+                },
+                "authenticationOnly": {
+                  "type": "boolean",
+                  "required": false
+                },
+                "captureAfterHours": {
+                  "type": "string",
+                  "required": false
+                },
+                "enhanceMonitoring": {
+                  "type": "boolean",
+                  "required": false
+                },
+                "extendAuthorizationDateIndicator": {
+                  "type": "string",
+                  "required": false
+                },
+                "localAmount": {
+                  "type": "object",
+                  "required": false
+                },
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "paymentMethod": {
+                  "type": "object",
+                  "required": true
+                },
+                "recipientInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "returnURL": {
+                  "type": "string",
+                  "required": false
+                },
+                "senderInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "storeInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "subMerchantInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "tradeInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": true
+                },
+                "transInitiator": {
+                  "type": "object",
+                  "required": true
+                },
+                "userInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "validTime": {
+                  "type": "string",
+                  "required": false
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "query": {
+              "httpMethod": "GET",
+              "path": "/g2/v1/payment/mer/{sid}/payment",
+              "description": "Payment",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              }
+            },
+            "submitAdditionalInfo": {
+              "httpMethod": "PUT",
+              "path": "/g2/v1/payment/mer/{sid}/payment",
+              "description": "Payment",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "action": {
+                  "type": "object",
+                  "required": false
+                },
+                "authentication": {
+                  "type": "object",
+                  "required": false
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "refund": {
+              "httpMethod": "POST",
+              "path": "/g2/v1/payment/mer/{sid}/refund",
+              "description": "Refund",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "initiatingReason": {
+                  "type": "string",
+                  "required": false
+                },
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": true
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "refundQuery": {
+              "httpMethod": "GET",
+              "path": "/g2/v1/payment/mer/{sid}/refund",
+              "description": "Refund",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "cryptogram": {
+          "methods": {
+            "create": {
+              "httpMethod": "POST",
+              "path": "/g2/v1/payment/mer/{sid}/cryptogram",
+              "description": "Cryptogram",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "paymentMethod": {
+                  "type": "object",
+                  "required": true
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "query": {
+              "httpMethod": "GET",
+              "path": "/g2/v1/payment/mer/{sid}/cryptogram",
+              "description": "Cryptogram",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": true,
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "paymentMethod": {
+          "methods": {
+            "create": {
+              "httpMethod": "POST",
+              "path": "/g2/v1/payment/mer/{sid}/paymentMethod",
+              "description": "PaymentMethod",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                }
+              },
+              "requestBody": {
+                "allowAuthentication": {
+                  "type": "boolean",
+                  "required": false
+                },
+                "authentication": {
+                  "type": "object",
+                  "required": false
+                },
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "networkTokenOnly": {
+                  "type": "boolean",
+                  "required": false
+                },
+                "paymentMethod": {
+                  "type": "object",
+                  "required": true
+                },
+                "returnURL": {
+                  "type": "string",
+                  "required": false
+                },
+                "storeInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "subMerchantInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": false
+                },
+                "transInitiator": {
+                  "type": "object",
+                  "required": true
+                },
+                "userInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "list": {
+              "httpMethod": "GET",
+              "path": "/g2/v1/payment/mer/{sid}/paymentMethod",
+              "description": "PaymentMethod",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                },
+                "userReference": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                },
+                "token": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                },
+                "cardBIN": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                },
+                "paymentBrand": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                },
+                "currency": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                },
+                "tokenize": {
+                  "location": "query",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "amount": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                }
+              }
+            },
+            "update": {
+              "httpMethod": "PUT",
+              "path": "/g2/v1/payment/mer/{sid}/paymentMethod",
+              "description": "PaymentMethod",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                },
+                "token": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "action": {
+                  "type": "object",
+                  "required": false
+                },
+                "authentication": {
+                  "type": "object",
+                  "required": false
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "paymentMethod": {
+                  "type": "object",
+                  "required": false
+                },
+                "userInfo": {
+                  "type": "object",
+                  "required": false
+                }
+              }
+            },
+            "delete": {
+              "httpMethod": "DELETE",
+              "path": "/g2/v1/payment/mer/{sid}/paymentMethod",
+              "description": "PaymentMethod",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "token": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                },
+                "networkTokenID": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "initiatingReason": {
+                  "type": "string",
+                  "required": false
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            }
+          }
+        },
+        "payout": {
+          "methods": {
+            "create": {
+              "httpMethod": "POST",
+              "path": "/g2/v1/payment/mer/{sid}/payout",
+              "description": "Payout",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                }
+              },
+              "requestBody": {
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "metadata": {
+                  "type": "string",
+                  "required": false
+                },
+                "paymentMethod": {
+                  "type": "object",
+                  "required": true
+                },
+                "recipientInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "senderInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "tradeInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": true
+                },
+                "transInitiator": {
+                  "type": "object",
+                  "required": true
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "query": {
+              "httpMethod": "GET",
+              "path": "/g2/v1/payment/mer/{sid}/payout",
+              "description": "Payout ",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "linkpay",
+      "description": "LinkPay hosted payment page",
+      "resources": {
+        "order": {
+          "methods": {
+            "create": {
+              "httpMethod": "POST",
+              "path": "/g2/v0/payment/mer/{sid}/evo.e-commerce.linkpay",
+              "description": "LinkPay",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                }
+              },
+              "requestBody": {
+                "merchantOrderInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "recipientInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "returnUrl": {
+                  "type": "string",
+                  "required": false
+                },
+                "senderInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "storeInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "tradeInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": true
+                },
+                "transInitiator": {
+                  "type": "object",
+                  "required": false
+                },
+                "userInfo": {
+                  "type": "object",
+                  "required": false
+                },
+                "validTime": {
+                  "type": "number",
+                  "required": false
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "query": {
+              "httpMethod": "GET",
+              "path": "/g2/v0/payment/mer/{sid}/evo.e-commerce.linkpay/{merchantOrderID}",
+              "description": "Retrieve LinkPay",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantOrderID of LinkPay": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string"
+                }
+              }
+            },
+            "cancelOrRefund": {
+              "httpMethod": "POST",
+              "path": "/g2/v0/payment/mer/{sid}/evo.e-commerce.linkpayCancelorRefund/{merchantOrderID}",
+              "description": "Cancel or Refund",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantOrderID of LinkPay": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": true
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "refund": {
+              "httpMethod": "POST",
+              "path": "/g2/v0/payment/mer/{sid}/evo.e-commerce.linkpayRefund/{merchantOrderID}",
+              "description": "Refund",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantOrderID of LinkPay": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string"
+                },
+                "merchantTransID": {
+                  "location": "query",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "requestBody": {
+                "merchantTransInfo": {
+                  "type": "object",
+                  "required": true
+                },
+                "transAmount": {
+                  "type": "object",
+                  "required": true
+                },
+                "webhook": {
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "refundQuery": {
+              "httpMethod": "GET",
+              "path": "/g2/v0/payment/mer/{sid}/evo.e-commerce.linkpayRefund/{merchantTransID}",
+              "description": "Retrieve LinkPay Refund",
+              "parameters": {
+                "sid": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "fromConfig": "merchantSid"
+                },
+                "merchantTransID of LinkPay Refund": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
