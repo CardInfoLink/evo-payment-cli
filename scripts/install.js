@@ -10,7 +10,7 @@ const https = require("https");
 
 const pkg = require("../package.json");
 const version = pkg.version;
-const repo = "evopayment/evo-cli";
+const repo = "CardInfoLink/evo-payment-cli";
 const binDir = path.join(__dirname, "..", "bin");
 
 const platformMap = {
@@ -32,7 +32,7 @@ if (!platform || !arch) {
 }
 
 const ext = platform === "windows" ? "zip" : "tar.gz";
-const assetName = `evo-cli_${version}_${platform}_${arch}.${ext}`;
+const assetName = `evo-payment-cli_${version}_${platform}_${arch}.${ext}`;
 const url = `https://github.com/${repo}/releases/download/v${version}/${assetName}`;
 
 console.log(`Downloading evo-cli v${version} for ${platform}/${arch}...`);

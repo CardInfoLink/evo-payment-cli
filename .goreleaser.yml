@@ -34,8 +34,8 @@ checksum:
 
 release:
   github:
-    owner: evopayment
-    name: evo-cli
+    owner: CardInfoLink
+    name: evo-payment-cli
   draft: false
   prerelease: auto
 
