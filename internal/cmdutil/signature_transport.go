@@ -73,6 +73,10 @@ func (t *SignatureTransport) RoundTrip(req *http.Request) (*http.Response, error
 		sort.Strings(parts)
 		reqPath = reqPath + "?" + strings.Join(parts, "&")
 	}
+	// Cryptogram API: signature must NOT include query string.
+	if strings.Contains(req.URL.Path, "/cryptogram") && req.Method == http.MethodPost {
+		reqPath = req.URL.Path
+	}
 
 	// 5. Compute signature.
 	sig, err := signature.GenerateSignature(
@@ -177,11 +181,10 @@ func (t *SignatureTransport) verifyResponse(resp *http.Response, method, reqPath
 		return nil
 	}
 
-	// Verify using original request method and full path (query params already sorted above).
+	// Verify using request method and path (same as used for request signature).
 	ok := signature.VerifySignature(method, reqPath, respDateTime, signKey, respMsgID, respBodyStr, signType, respAuth)
-	if !ok && strings.Contains(reqPath, "?") {
-		// Fallback: Some APIs (e.g. GET /FXRateInquiry) use POST method + path without
-		// query string for response signatures.
+	if !ok {
+		// Fallback: GET /FXRateInquiry computes response signature with POST + path without query string.
 		pathOnly := strings.SplitN(reqPath, "?", 2)[0]
 		ok = signature.VerifySignature("POST", pathOnly, respDateTime, signKey, respMsgID, respBodyStr, signType, respAuth)
 	}
