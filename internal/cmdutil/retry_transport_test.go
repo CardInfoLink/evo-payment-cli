@@ -379,3 +379,35 @@ func TestProperty24_RetryTransportBehavior(t *testing.T) {
 		t.Errorf("Property 24 failed: %v", err)
 	}
 }
+
+// --- Last attempt body preservation on 5xx ---
+
+func TestRetryTransport_LastAttemptBodyReadable(t *testing.T) {
+	ct := &countingTransport{
+		responses: []*http.Response{
+			{StatusCode: 500, Body: io.NopCloser(strings.NewReader(`{"error":"attempt1"}`))},
+			{StatusCode: 500, Body: io.NopCloser(strings.NewReader(`{"error":"attempt2"}`))},
+			{StatusCode: 500, Body: io.NopCloser(strings.NewReader(`{"error":"attempt3"}`))},
+			{StatusCode: 502, Body: io.NopCloser(strings.NewReader(`{"error":"last attempt"}`))},
+		},
+	}
+	rt := &RetryTransport{Base: ct, MaxRetries: 3, sleepFunc: func(d time.Duration) {}}
+
+	req, _ := http.NewRequest("POST", "https://example.com/test", strings.NewReader(`{}`))
+	r, err := rt.RoundTrip(req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if r.StatusCode != 502 {
+		t.Errorf("StatusCode = %d, want 502", r.StatusCode)
+	}
+
+	// The last response body must still be readable (not closed).
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		t.Fatalf("failed to read last response body: %v", err)
+	}
+	if string(body) != `{"error":"last attempt"}` {
+		t.Errorf("body = %q, want %q", string(body), `{"error":"last attempt"}`)
+	}
+}

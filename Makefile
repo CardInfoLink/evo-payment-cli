@@ -4,7 +4,7 @@ DATE     := $(shell date +%Y-%m-%d)
 LDFLAGS  := -s -w -X github.com/evopayment/evo-cli/internal/build.Version=$(VERSION) -X github.com/evopayment/evo-cli/internal/build.Date=$(DATE)
 PREFIX   ?= /usr/local
 
-.PHONY: build gen_meta test vet install clean e2e e2e-live-verbose test-all
+.PHONY: build gen_meta test vet install clean e2e e2e-live e2e-live-verbose test-all release publish
 
 build: gen_meta
 	go build -trimpath -ldflags "$(LDFLAGS)" -o $(BINARY) .
@@ -41,3 +41,11 @@ e2e-live-verbose: build
 
 test-all: test e2e
 	@echo "All tests passed (unit + e2e)"
+
+release: test-all
+	@echo "Building release with goreleaser..."
+	goreleaser release --clean
+
+publish:
+	@echo "Publishing to npm..."
+	npm publish --access public

@@ -801,3 +801,97 @@ func TestProperty14_UserSpecifiedIdempotencyKey(t *testing.T) {
 		t.Errorf("Property 14 failed: %v", err)
 	}
 }
+
+// --- Query param sorting for signature ---
+
+func TestSignatureTransport_QueryParamsSortedForSignature(t *testing.T) {
+	cfg := testConfig()
+
+	// We capture the signed path by building the expected signature with sorted params.
+	mock := &mockTransport{
+		respFunc: func(req *http.Request) (*http.Response, error) {
+			// The response signature should use the sorted query string path.
+			sortedPath := req.URL.Path + "?merchantTransID=Y&token=X"
+			return buildSignedResponse(req.Method, sortedPath, cfg.SignKey.Value, cfg.SignType, `{"ok":true}`), nil
+		},
+	}
+
+	transport := &SignatureTransport{
+		Base:       mock,
+		ConfigFunc: func() (*core.CliConfig, error) { return cfg, nil },
+	}
+
+	// Query params in non-alphabetical order: token before merchantTransID.
+	req, _ := http.NewRequest("GET", "https://hkg-online-uat.everonet.com/g2/v1/payment/mer/S024116/payment?token=X&merchantTransID=Y", nil)
+	resp, err := transport.RoundTrip(req)
+	if err != nil {
+		t.Fatalf("RoundTrip failed: %v", err)
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	if string(body) != `{"ok":true}` {
+		t.Errorf("response body = %q, want %q", string(body), `{"ok":true}`)
+	}
+}
+
+// --- Cryptogram POST signature excludes query string ---
+
+func TestSignatureTransport_CryptogramPOST_SignatureExcludesQueryString(t *testing.T) {
+	cfg := testConfig()
+
+	mock := &mockTransport{
+		respFunc: func(req *http.Request) (*http.Response, error) {
+			// For cryptogram POST, signature uses path WITHOUT query string.
+			return buildSignedResponse(req.Method, req.URL.Path, cfg.SignKey.Value, cfg.SignType, `{"ok":true}`), nil
+		},
+	}
+
+	transport := &SignatureTransport{
+		Base:       mock,
+		ConfigFunc: func() (*core.CliConfig, error) { return cfg, nil },
+	}
+
+	req, _ := http.NewRequest("POST", "https://hkg-online-uat.everonet.com/g2/v1/payment/mer/S024116/cryptogram?merchantTransID=TX001", strings.NewReader(`{"test":true}`))
+	resp, err := transport.RoundTrip(req)
+	if err != nil {
+		t.Fatalf("RoundTrip failed: %v", err)
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	if string(body) != `{"ok":true}` {
+		t.Errorf("response body = %q, want %q", string(body), `{"ok":true}`)
+	}
+}
+
+// --- Response signature fallback: POST + path-without-query-string ---
+
+func TestSignatureTransport_ResponseSignatureFallback(t *testing.T) {
+	cfg := testConfig()
+	respBody := `{"result":{"code":"S0000"}}`
+
+	mock := &mockTransport{
+		respFunc: func(req *http.Request) (*http.Response, error) {
+			// Server signs response with POST + path-only (no query string).
+			// This simulates the FXRateInquiry / cryptogram fallback behavior.
+			pathOnly := strings.SplitN(req.URL.Path, "?", 2)[0]
+			return buildSignedResponse("POST", pathOnly, cfg.SignKey.Value, cfg.SignType, respBody), nil
+		},
+	}
+
+	transport := &SignatureTransport{
+		Base:       mock,
+		ConfigFunc: func() (*core.CliConfig, error) { return cfg, nil },
+	}
+
+	// GET request with query string — primary verification will fail, fallback should succeed.
+	req, _ := http.NewRequest("GET", "https://hkg-online-uat.everonet.com/g2/v1/payment/mer/S024116/FXRateInquiry?baseCurrency=USD", nil)
+	resp, err := transport.RoundTrip(req)
+	if err != nil {
+		t.Fatalf("RoundTrip failed (fallback should have succeeded): %v", err)
+	}
+
+	body, _ := io.ReadAll(resp.Body)
+	if string(body) != respBody {
+		t.Errorf("response body = %q, want %q", string(body), respBody)
+	}
+}

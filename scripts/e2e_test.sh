@@ -80,6 +80,7 @@ assert_contains "$OUT" "completion" "--help lists completion command"
 assert_contains "$OUT" "payment" "--help lists payment command"
 assert_contains "$OUT" "linkpay" "--help lists linkpay command"
 assert_contains "$OUT" "token" "--help lists token command"
+assert_contains "$OUT" "cryptogram" "--help lists cryptogram command"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo ""
@@ -291,6 +292,12 @@ assert_contains "$OUT" '"method": "GET"' "token +query dry-run → GET"
 OUT=$("$CLI" token +delete --token-id TK001 --yes --dry-run 2>&1)
 assert_contains "$OUT" '"method": "DELETE"' "token +delete dry-run → DELETE"
 
+# token +create with new flags (network-token-only, email)
+OUT=$("$CLI" token +create --payment-type card --vault-id V001 --user-reference user@test.com --network-token-only true --email test@test.com --dry-run 2>&1)
+assert_contains "$OUT" '"method": "POST"' "token +create new flags dry-run → POST"
+assert_contains "$OUT" "paymentMethod" "token +create new flags dry-run → path contains paymentMethod"
+assert_contains "$OUT" "networkTokenOnly" "token +create new flags dry-run → body contains networkTokenOnly"
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo ""
 echo "▸ 16. Token shortcuts — validation"
@@ -399,6 +406,20 @@ assert_contains "$OUT" "/cryptogram" "cryptogram create dry-run → path contain
 OUT=$("$CLI" payment cryptogram query --params '{"merchantTransID":"TX001"}' --dry-run 2>&1)
 assert_contains "$OUT" '"method": "GET"' "cryptogram query dry-run → GET"
 assert_contains "$OUT" "/cryptogram" "cryptogram query dry-run → path contains /cryptogram"
+
+# Cryptogram shortcut dry-run tests
+OUT=$("$CLI" cryptogram +create --network-token-id NTK001 --original-merchant-tx-id TX001 --dry-run 2>&1)
+assert_contains "$OUT" '"method": "POST"' "cryptogram +create dry-run → POST"
+assert_contains "$OUT" "/cryptogram" "cryptogram +create dry-run → path contains /cryptogram"
+
+OUT=$("$CLI" cryptogram +query --merchant-tx-id CRYPTO001 --dry-run 2>&1)
+assert_contains "$OUT" '"method": "GET"' "cryptogram +query dry-run → GET"
+assert_contains "$OUT" "/cryptogram" "cryptogram +query dry-run → path contains /cryptogram"
+
+OUT=$("$CLI" cryptogram +pay --network-token-id NTK001 --network-token-value 2222030194871591 --token-cryptogram AAA --eci 06 --payment-brand Mastercard --amount 10 --currency USD --dry-run 2>&1)
+assert_contains "$OUT" '"method": "POST"' "cryptogram +pay dry-run → POST"
+assert_contains "$OUT" "/payment" "cryptogram +pay dry-run → path contains /payment"
+assert_contains "$OUT" "networkToken" "cryptogram +pay dry-run → body contains networkToken"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo ""

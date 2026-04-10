@@ -768,3 +768,21 @@ func TestProperty20_HTTPNon200ErrorHandling(t *testing.T) {
 		t.Errorf("Property 20 failed: %v", err)
 	}
 }
+
+// --- HTTPError.Error() with result code and message ---
+
+func TestHTTPError_ErrorWithResultCode(t *testing.T) {
+	err := &HTTPError{
+		StatusCode: 500,
+		Body: map[string]interface{}{
+			"result": map[string]interface{}{
+				"code":    "E0000",
+				"message": "Internal error",
+			},
+		},
+	}
+	want := "HTTP 500: E0000 Internal error"
+	if got := err.Error(); got != want {
+		t.Errorf("HTTPError.Error() = %q, want %q", got, want)
+	}
+}

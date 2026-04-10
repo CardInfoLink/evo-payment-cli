@@ -23,6 +23,8 @@ func CreateShortcut() shortcuts.Shortcut {
 			{Name: "card-number", Desc: "Card number (required for card type)"},
 			{Name: "card-expiry", Desc: "Card expiry date (MMYY)"},
 			{Name: "card-cvc", Desc: "Card CVC/CVV"},
+			{Name: "email", Desc: "User email (required for network token)"},
+			{Name: "network-token-only", Desc: "Only create network token, no gateway token (true/false)"},
 		},
 		DryRun: func(ctx context.Context, rt *shortcuts.RuntimeContext) error {
 			path := fmt.Sprintf("/g2/v1/payment/mer/%s/paymentMethod", rt.Config.MerchantSid)
@@ -58,7 +60,7 @@ func buildCreateBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 		card["cardInfo"] = cardInfo
 	}
 
-	return map[string]interface{}{
+	body := map[string]interface{}{
 		"merchantTransInfo": map[string]interface{}{
 			"merchantTransID":   txID,
 			"merchantTransTime": now,
@@ -74,4 +76,12 @@ func buildCreateBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 			"platform": "WEB",
 		},
 	}
+	if email := rt.Str("email"); email != "" {
+		body["userInfo"].(map[string]interface{})["email"] = email
+		body["userInfo"].(map[string]interface{})["locale"] = "en_US"
+	}
+	if rt.Str("network-token-only") == "true" {
+		body["networkTokenOnly"] = true
+	}
+	return body
 }

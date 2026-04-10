@@ -419,6 +419,64 @@ if [[ -n "$NETWORK_TOKEN_ID" ]]; then
   OUT=$(run_cli "$CLI" api GET "/g2/v1/payment/mer/${SID}/cryptogram" \
     --params "{\"merchantTransID\":\"${CRYPTO_TX}\"}") || true
   assert_ok_or_expected "$OUT" "GET cryptogram query"
+
+  # Step 3: cryptogram +create shortcut
+  sleep 2
+  OUT=$(run_cli "$CLI" cryptogram +create --network-token-id "$NETWORK_TOKEN_ID" --original-merchant-tx-id "$NT_TX") || true
+  assert_ok_or_expected "$OUT" "cryptogram +create shortcut"
+  SC_CRYPTO_TX=$(jq? "$OUT" "
+mt=d.get('data',{}).get('cryptogram',d.get('data',{})).get('merchantTransInfo',{})
+print(mt.get('merchantTransID',''))
+") || SC_CRYPTO_TX=""
+  SC_CRYPTO_TX="${SC_CRYPTO_TX:-}"
+  # Extract tokenCryptogram and eci for +pay
+  SC_TOKEN_CRYPTOGRAM=$(jq? "$OUT" "
+nt=d.get('data',{}).get('paymentMethod',{}).get('networkToken',{})
+print(nt.get('tokenCryptogram',''))
+") || SC_TOKEN_CRYPTOGRAM=""
+  SC_TOKEN_CRYPTOGRAM="${SC_TOKEN_CRYPTOGRAM:-}"
+  SC_ECI=$(jq? "$OUT" "
+nt=d.get('data',{}).get('paymentMethod',{}).get('networkToken',{})
+print(nt.get('eci',''))
+") || SC_ECI=""
+  SC_ECI="${SC_ECI:-}"
+  SC_NT_VALUE=$(jq? "$OUT" "
+nt=d.get('data',{}).get('paymentMethod',{}).get('networkToken',{})
+print(nt.get('value',''))
+") || SC_NT_VALUE=""
+  SC_NT_VALUE="${SC_NT_VALUE:-}"
+  SC_NT_BRAND=$(jq? "$OUT" "
+nt=d.get('data',{}).get('paymentMethod',{}).get('networkToken',{})
+print(nt.get('paymentBrand',''))
+") || SC_NT_BRAND=""
+  SC_NT_BRAND="${SC_NT_BRAND:-}"
+
+  # Step 4: cryptogram +query shortcut
+  if [[ -n "$SC_CRYPTO_TX" ]]; then
+    sleep 2
+    OUT=$(run_cli "$CLI" cryptogram +query --merchant-tx-id "$SC_CRYPTO_TX") || true
+    assert_ok_or_expected "$OUT" "cryptogram +query shortcut"
+  else
+    # Fall back to querying with the original CRYPTO_TX
+    sleep 2
+    OUT=$(run_cli "$CLI" cryptogram +query --merchant-tx-id "$CRYPTO_TX") || true
+    assert_ok_or_expected "$OUT" "cryptogram +query shortcut (fallback tx)"
+  fi
+
+  # Step 5: cryptogram +pay shortcut — pay with network token + cryptogram
+  if [[ -n "$SC_TOKEN_CRYPTOGRAM" && -n "$SC_ECI" && -n "$SC_NT_VALUE" && -n "$SC_NT_BRAND" ]]; then
+    sleep 2
+    OUT=$(run_cli "$CLI" cryptogram +pay \
+      --network-token-id "$NETWORK_TOKEN_ID" \
+      --network-token-value "$SC_NT_VALUE" \
+      --token-cryptogram "$SC_TOKEN_CRYPTOGRAM" \
+      --eci "$SC_ECI" \
+      --payment-brand "$SC_NT_BRAND" \
+      --amount 1.00 --currency USD) || true
+    assert_ok_or_expected "$OUT" "cryptogram +pay shortcut"
+  else
+    echo "  ⚠️  [skip] No cryptogram/eci/value/brand available — skipping +pay"
+  fi
 else
   echo "  ⚠️  [skip] No network token available — skipping cryptogram test"
 fi

@@ -18,8 +18,8 @@ echo "your-sign-key" | evo-cli config init --merchant-sid S024116 --sign-type SH
 # Verify setup
 evo-cli doctor
 
-# Create a payment
-evo-cli payment +pay --amount 10.00 --currency USD --payment-brand Alipay
+# Create a payment (Alipay e-wallet, requires returnURL)
+evo-cli payment +pay --amount 10.00 --currency USD --payment-brand Alipay --return-url https://your-site.com/return
 
 # Query payment status
 evo-cli payment +query --merchant-tx-id TX001
@@ -39,7 +39,7 @@ evo-cli provides three layers of commands, from flexible to convenient:
 
 **Payment:**
 ```bash
-evo-cli payment +pay --amount 100 --currency USD --payment-brand Alipay
+evo-cli payment +pay --amount 100 --currency USD --payment-brand Alipay --return-url https://your-site.com/return
 evo-cli payment +query --merchant-tx-id TX001
 evo-cli payment +capture --original-merchant-tx-id TX001 --amount 100 --currency USD
 evo-cli payment +cancel --original-merchant-tx-id TX001 --yes
@@ -55,10 +55,31 @@ evo-cli linkpay +refund --merchant-order-id ORD001 --amount 50 --currency USD --
 
 **Token:**
 ```bash
-evo-cli token +create --payment-type card --vault-id V001 --user-reference user@example.com \
-  --card-number 4111111111111111 --card-expiry 1226 --card-cvc 123
+evo-cli token +create --payment-type card --vault-id 90451900 --user-reference user@example.com \
+  --card-number 5120350100064594 --card-expiry 2810 --card-cvc 123
 evo-cli token +query --merchant-tx-id TX001
 evo-cli token +delete --token-id TK001 --yes
+```
+
+**Cryptogram (Network Token):**
+```bash
+# Step 1: Create a network token
+evo-cli token +create --payment-type card --vault-id 90451900 --user-reference user@example.com \
+  --network-token-only true --email user@example.com \
+  --card-number 5120350100064594 --card-expiry 2810 --card-cvc 123
+# Response includes paymentMethod.networkToken.tokenID
+
+# Step 2: Create cryptogram using the network token ID
+evo-cli cryptogram +create --network-token-id <tokenID> --original-merchant-tx-id <txID>
+# Response includes paymentMethod.networkToken.tokenCryptogram
+
+# Step 3: Query cryptogram result
+evo-cli cryptogram +query --merchant-tx-id <cryptogramTxID>
+
+# Step 4: Pay with network token + cryptogram
+evo-cli cryptogram +pay --network-token-id <tokenID> --token-cryptogram <cryptogram> --eci <eci> --network-token-value <tokenValue>, --payment-brand Mastercard \
+  --amount 10.00 --currency USD
+# Uses paymentMethod.type=token with token.type=networkToken
 ```
 
 ### API Introspection

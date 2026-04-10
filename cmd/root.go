@@ -15,6 +15,7 @@ import (
 	serviceCmd "github.com/evopayment/evo-cli/cmd/service"
 	"github.com/evopayment/evo-cli/internal/build"
 	"github.com/evopayment/evo-cli/internal/cmdutil"
+	cryptogramShortcuts "github.com/evopayment/evo-cli/shortcuts/cryptogram"
 	linkpayShortcuts "github.com/evopayment/evo-cli/shortcuts/linkpay"
 	paymentShortcuts "github.com/evopayment/evo-cli/shortcuts/payment"
 	tokenShortcuts "github.com/evopayment/evo-cli/shortcuts/token"
@@ -62,10 +63,11 @@ error classification, and structured JSON output automatically.`,
 	// Register service commands from Registry (auto-generated from meta_data.json).
 	_ = serviceCmd.RegisterServiceCommands(cmd, f)
 
-	// Register all shortcut commands (payment, linkpay, token).
+	// Register all shortcut commands (payment, linkpay, token, cryptogram).
 	paymentShortcuts.RegisterShortcuts(cmd, f)
 	linkpayShortcuts.RegisterShortcuts(cmd, f)
 	tokenShortcuts.RegisterShortcuts(cmd, f)
+	cryptogramShortcuts.RegisterShortcuts(cmd, f)
 
 	return cmd
 }

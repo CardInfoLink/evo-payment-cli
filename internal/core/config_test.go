@@ -938,3 +938,46 @@ func TestSaveConfig_WithLinkPayEndpoints(t *testing.T) {
 		t.Errorf("expected lp prod endpoint, got %q", loaded.LinkPayEndpoints.Prod)
 	}
 }
+
+// --- IsLinkPayPath tests ---
+
+func TestIsLinkPayPath(t *testing.T) {
+	tests := []struct {
+		path string
+		want bool
+	}{
+		{"/g2/v0/payment/mer/{sid}/evo.e-commerce.linkpay", true},
+		{"/g2/v0/payment/mer/{sid}/evo.e-commerce.linkpay/ORDER001", true},
+		{"/g2/v0/payment/mer/{sid}/evo.e-commerce.linkpayCancelorRefund/ORDER001", true},
+		{"/g2/v0/payment/mer/{sid}/evo.e-commerce.linkpayRefund/ORDER001", true},
+		{"/g2/v1/payment/mer/{sid}/payment", false},
+		{"/g2/v1/payment/mer/{sid}/cryptogram", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			if got := IsLinkPayPath(tt.path); got != tt.want {
+				t.Errorf("IsLinkPayPath(%q) = %v, want %v", tt.path, got, tt.want)
+			}
+		})
+	}
+}
+
+// --- ResolveBaseURLForPath tests ---
+
+func TestResolveBaseURLForPath_LinkPayPath(t *testing.T) {
+	cfg := &CliConfig{Env: "test"}
+	path := "/g2/v0/payment/mer/S024116/evo.e-commerce.linkpay"
+	got := cfg.ResolveBaseURLForPath(path)
+	if got != DefaultLinkPayTestEndpoint {
+		t.Errorf("ResolveBaseURLForPath(%q) = %q, want %q", path, got, DefaultLinkPayTestEndpoint)
+	}
+}
+
+func TestResolveBaseURLForPath_NonLinkPayPath(t *testing.T) {
+	cfg := &CliConfig{Env: "test"}
+	path := "/g2/v1/payment/mer/S024116/payment"
+	got := cfg.ResolveBaseURLForPath(path)
+	if got != DefaultTestEndpoint {
+		t.Errorf("ResolveBaseURLForPath(%q) = %q, want %q", path, got, DefaultTestEndpoint)
+	}
+}
