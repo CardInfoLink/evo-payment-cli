@@ -153,6 +153,13 @@ func TestLoadConfig_FileNotExist(t *testing.T) {
 }
 
 func TestSaveConfig_AndLoadConfig(t *testing.T) {
+	// Clear env vars that would override config file values.
+	t.Setenv(EnvVarMerchantSid, "")
+	t.Setenv(EnvVarSignKey, "")
+	t.Setenv(EnvVarSignType, "")
+	t.Setenv(EnvVarBaseURL, "")
+	t.Setenv(EnvVarLinkPayBaseURL, "")
+
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -243,6 +250,13 @@ func TestLoadConfig_EnvOverrides(t *testing.T) {
 }
 
 func TestLoadConfig_EnvPartialOverride(t *testing.T) {
+	// Clear all env vars first, then selectively set only the one we want to test.
+	t.Setenv(EnvVarMerchantSid, "")
+	t.Setenv(EnvVarSignKey, "")
+	t.Setenv(EnvVarSignType, "")
+	t.Setenv(EnvVarBaseURL, "")
+	t.Setenv(EnvVarLinkPayBaseURL, "")
+
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -882,6 +896,9 @@ func TestSetResolvedLinkPayBaseURL(t *testing.T) {
 }
 
 func TestLoadConfig_LinkPayEnvOverride(t *testing.T) {
+	// Clear env vars that would override config file values.
+	t.Setenv(EnvVarSignKey, "")
+
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -908,6 +925,9 @@ func TestLoadConfig_LinkPayEnvOverride(t *testing.T) {
 }
 
 func TestSaveConfig_WithLinkPayEndpoints(t *testing.T) {
+	// Clear env vars that would override config file values.
+	t.Setenv(EnvVarSignKey, "")
+
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 

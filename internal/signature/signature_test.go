@@ -280,7 +280,8 @@ func TestProperty2_EmptyLineOmission(t *testing.T) {
 			return false
 		}
 
-		// 2. Non-empty input lines must appear in the result in their original relative order
+		// 2. The result must equal strings.Join of non-empty inputs separated by \n.
+		//    This is a direct equivalence check against the spec behavior.
 		inputs := []string{method, path, dateTime, signKey, msgID, body}
 		var nonEmpty []string
 		for _, s := range inputs {
@@ -293,16 +294,8 @@ func TestProperty2_EmptyLineOmission(t *testing.T) {
 			return result == ""
 		}
 
-		resultLines := strings.Split(result, "\n")
-		if len(resultLines) != len(nonEmpty) {
-			return false
-		}
-		for i, line := range resultLines {
-			if line != nonEmpty[i] {
-				return false
-			}
-		}
-		return true
+		expected := strings.Join(nonEmpty, "\n")
+		return result == expected
 	}
 
 	cfg := &quick.Config{MaxCount: 100}

@@ -39,8 +39,8 @@ e2e-live-verbose: build
 	@echo "Running Live E2E tests (verbose — calls real Evo Payment UAT APIs)..."
 	bash scripts/e2e_live_test.sh ./$(BINARY) --verbose
 
-test-all: test e2e
-	@echo "All tests passed (unit + e2e)"
+test-all: test e2e e2e-live
+	@echo "All tests passed (unit + e2e + e2e-live)"
 
 release: test-all
 	@echo "Building release with goreleaser..."
