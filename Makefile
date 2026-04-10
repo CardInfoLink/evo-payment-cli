@@ -53,5 +53,11 @@ release: test-all
 	goreleaser release --clean
 
 publish:
-	@echo "Publishing to npm..."
+	@CURRENT=$$(node -p "require('./package.json').version"); \
+	echo "Current npm version: $$CURRENT"; \
+	printf "Enter new version (e.g. 0.2.0, without v prefix): "; \
+	read NEW_VERSION; \
+	if [ -z "$$NEW_VERSION" ]; then echo "Error: version cannot be empty"; exit 1; fi; \
+	npm version $$NEW_VERSION --no-git-tag-version; \
+	echo "Updated package.json to $$NEW_VERSION, publishing..."; \
 	npm publish --access public
