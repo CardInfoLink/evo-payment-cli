@@ -39,11 +39,17 @@ e2e-live-verbose: build
 	@echo "Running Live E2E tests (verbose — calls real Evo Payment UAT APIs)..."
 	bash scripts/e2e_live_test.sh ./$(BINARY) --verbose
 
-test-all: test e2e e2e-live
-	@echo "All tests passed (unit + e2e + e2e-live)"
+test-all: test e2e
+	@echo "All tests passed (unit + e2e)"
 
 release: test-all
-	@echo "Building release with goreleaser..."
+	@CURRENT=$$(git describe --tags --abbrev=0 2>/dev/null || echo "none"); \
+	echo "Current version: $$CURRENT"; \
+	printf "Enter new version (e.g. v0.2.0): "; \
+	read NEW_VERSION; \
+	if [ -z "$$NEW_VERSION" ]; then echo "Error: version cannot be empty"; exit 1; fi; \
+	git tag -a $$NEW_VERSION -m "Release $$NEW_VERSION"; \
+	echo "Tagged $$NEW_VERSION, building release with goreleaser..."; \
 	goreleaser release --clean
 
 publish:
