@@ -77,7 +77,7 @@ evo-cli cryptogram +create --network-token-id <tokenID> --original-merchant-tx-i
 evo-cli cryptogram +query --merchant-tx-id <cryptogramTxID>
 
 # Step 4: Pay with network token + cryptogram
-evo-cli cryptogram +pay --network-token-id <tokenID> --token-cryptogram <cryptogram> --eci <eci> --network-token-value <tokenValue>, --payment-brand Mastercard \
+evo-cli cryptogram +pay --network-token-value <tokenValue> --token-expiry-date <MMYY> --token-cryptogram <cryptogram> --eci <eci> --payment-brand Mastercard \
   --amount 10.00 --currency USD
 # Uses paymentMethod.type=token with token.type=networkToken
 ```

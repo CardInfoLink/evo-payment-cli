@@ -450,6 +450,11 @@ nt=d.get('data',{}).get('paymentMethod',{}).get('networkToken',{})
 print(nt.get('paymentBrand',''))
 ") || SC_NT_BRAND=""
   SC_NT_BRAND="${SC_NT_BRAND:-}"
+  SC_NT_EXPIRY=$(jq? "$OUT" "
+nt=d.get('data',{}).get('paymentMethod',{}).get('networkToken',{})
+print(nt.get('expiryDate',''))
+") || SC_NT_EXPIRY=""
+  SC_NT_EXPIRY="${SC_NT_EXPIRY:-}"
 
   # Step 4: cryptogram +query shortcut
   if [[ -n "$SC_CRYPTO_TX" ]]; then
@@ -464,11 +469,11 @@ print(nt.get('paymentBrand',''))
   fi
 
   # Step 5: cryptogram +pay shortcut — pay with network token + cryptogram
-  if [[ -n "$SC_TOKEN_CRYPTOGRAM" && -n "$SC_ECI" && -n "$SC_NT_VALUE" && -n "$SC_NT_BRAND" ]]; then
+  if [[ -n "$SC_TOKEN_CRYPTOGRAM" && -n "$SC_ECI" && -n "$SC_NT_VALUE" && -n "$SC_NT_BRAND" && -n "$SC_NT_EXPIRY" ]]; then
     sleep 2
     OUT=$(run_cli "$CLI" cryptogram +pay \
-      --network-token-id "$NETWORK_TOKEN_ID" \
       --network-token-value "$SC_NT_VALUE" \
+      --token-expiry-date "$SC_NT_EXPIRY" \
       --token-cryptogram "$SC_TOKEN_CRYPTOGRAM" \
       --eci "$SC_ECI" \
       --payment-brand "$SC_NT_BRAND" \

@@ -264,8 +264,8 @@ func TestPay_DryRun(t *testing.T) {
 	f := &stubFactory{config: newTestConfig(), io: ios}
 	root := buildCmd(f, PayShortcut())
 	root.SetArgs([]string{"cryptogram", "+pay",
-		"--network-token-id", "NTK001",
 		"--network-token-value", "2222030194871591",
+		"--token-expiry-date", "1226",
 		"--token-cryptogram", "AAKQJPQZFWufAAJ5j4JeAAADFA==",
 		"--eci", "06",
 		"--payment-brand", "Mastercard",
@@ -299,8 +299,8 @@ func TestPay_DryRun(t *testing.T) {
 	if nt["value"] != "2222030194871591" {
 		t.Errorf("token.value = %v, want 2222030194871591", nt["value"])
 	}
-	if nt["tokenID"] != "NTK001" {
-		t.Errorf("token.tokenID = %v, want NTK001", nt["tokenID"])
+	if nt["expiryDate"] != "1226" {
+		t.Errorf("token.expiryDate = %v, want 1226", nt["expiryDate"])
 	}
 	if nt["tokenCryptogram"] != "AAKQJPQZFWufAAJ5j4JeAAADFA==" {
 		t.Errorf("token.tokenCryptogram = %v", nt["tokenCryptogram"])
@@ -314,7 +314,7 @@ func TestPay_MissingRequired(t *testing.T) {
 	ios, _, _ := newTestIO()
 	f := &stubFactory{config: newTestConfig(), io: ios}
 	root := buildCmd(f, PayShortcut())
-	root.SetArgs([]string{"cryptogram", "+pay", "--network-token-id", "NTK001", "--network-token-value", "2222030194871591"})
+	root.SetArgs([]string{"cryptogram", "+pay", "--network-token-value", "2222030194871591", "--token-expiry-date", "1226"})
 	err := root.Execute()
 	if err == nil {
 		t.Fatal("expected error for missing required flags")
@@ -339,8 +339,8 @@ func TestPay_Execute_Success(t *testing.T) {
 	f := &stubFactory{config: newTestConfig(), client: client, io: ios}
 	root := buildCmd(f, PayShortcut())
 	root.SetArgs([]string{"cryptogram", "+pay",
-		"--network-token-id", "NTK001",
 		"--network-token-value", "2222030194871591",
+		"--token-expiry-date", "1226",
 		"--token-cryptogram", "AAKQJPQZFWufAAJ5j4JeAAADFA==",
 		"--eci", "06",
 		"--payment-brand", "Mastercard",

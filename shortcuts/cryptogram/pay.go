@@ -17,8 +17,8 @@ func PayShortcut() shortcuts.Shortcut {
 		Description: "Pay with network token and cryptogram",
 		Risk:        shortcuts.RiskWrite,
 		Flags: []shortcuts.Flag{
-			{Name: "network-token-id", Desc: "Network token ID from card scheme", Required: true},
 			{Name: "network-token-value", Desc: "Network token value (card number form)", Required: true},
+			{Name: "token-expiry-date", Desc: "Token expiry date (MMYY)", Required: true},
 			{Name: "token-cryptogram", Desc: "Cryptogram value from +create", Required: true},
 			{Name: "eci", Desc: "ECI value from +create response", Required: true},
 			{Name: "payment-brand", Desc: "Payment brand (e.g. Visa, Mastercard)", Required: true},
@@ -66,7 +66,7 @@ func buildPayBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 			"token": map[string]interface{}{
 				"type":              "networkToken",
 				"value":             rt.Str("network-token-value"),
-				"tokenID":           rt.Str("network-token-id"),
+				"expiryDate":        rt.Str("token-expiry-date"),
 				"tokenCryptogram":   rt.Str("token-cryptogram"),
 				"eci":               rt.Str("eci"),
 				"paymentBrand":      rt.Str("payment-brand"),

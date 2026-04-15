@@ -416,7 +416,7 @@ OUT=$("$CLI" cryptogram +query --merchant-tx-id CRYPTO001 --dry-run 2>&1)
 assert_contains "$OUT" '"method": "GET"' "cryptogram +query dry-run → GET"
 assert_contains "$OUT" "/cryptogram" "cryptogram +query dry-run → path contains /cryptogram"
 
-OUT=$("$CLI" cryptogram +pay --network-token-id NTK001 --network-token-value 2222030194871591 --token-cryptogram AAA --eci 06 --payment-brand Mastercard --amount 10 --currency USD --dry-run 2>&1)
+OUT=$("$CLI" cryptogram +pay --network-token-value 2222030194871591 --token-expiry-date 1226 --token-cryptogram AAA --eci 06 --payment-brand Mastercard --amount 10 --currency USD --dry-run 2>&1)
 assert_contains "$OUT" '"method": "POST"' "cryptogram +pay dry-run → POST"
 assert_contains "$OUT" "/payment" "cryptogram +pay dry-run → path contains /payment"
 assert_contains "$OUT" "networkToken" "cryptogram +pay dry-run → body contains networkToken"
