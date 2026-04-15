@@ -48,11 +48,13 @@ release: test-all
 	printf "Enter new version (e.g. v0.2.0): "; \
 	read NEW_VERSION; \
 	if [ -z "$$NEW_VERSION" ]; then echo "Error: version cannot be empty"; exit 1; fi; \
+	case "$$NEW_VERSION" in v*) ;; *) NEW_VERSION="v$$NEW_VERSION";; esac; \
 	git tag -a $$NEW_VERSION -m "Release $$NEW_VERSION"; \
 	echo "Tagged $$NEW_VERSION, building release with goreleaser..."; \
 	goreleaser release --clean
 
 publish:
+	@npm whoami >/dev/null 2>&1 || { echo "Not logged in to npm, running npm login..."; npm login; }
 	@CURRENT=$$(node -p "require('./package.json').version"); \
 	echo "Current npm version: $$CURRENT"; \
 	printf "Enter new version (e.g. 0.2.0, without v prefix): "; \
