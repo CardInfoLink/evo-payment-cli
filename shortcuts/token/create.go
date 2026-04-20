@@ -25,6 +25,8 @@ func CreateShortcut() shortcuts.Shortcut {
 			{Name: "card-cvc", Desc: "Card CVC/CVV"},
 			{Name: "email", Desc: "User email (required for network token)"},
 			{Name: "network-token-only", Desc: "Only create network token, no gateway token (true/false)"},
+			{Name: "allow-authentication", Desc: "Allow 3DS authentication during tokenization (true/false)"},
+			{Name: "return-url", Desc: "Return URL for 3DS authentication redirect"},
 		},
 		DryRun: func(ctx context.Context, rt *shortcuts.RuntimeContext) error {
 			path := fmt.Sprintf("/g2/v1/payment/mer/%s/paymentMethod", rt.Config.MerchantSid)
@@ -82,6 +84,12 @@ func buildCreateBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 	}
 	if rt.Str("network-token-only") == "true" {
 		body["networkTokenOnly"] = true
+	}
+	if rt.Str("allow-authentication") == "true" {
+		body["allowAuthentication"] = true
+	}
+	if v := rt.Str("return-url"); v != "" {
+		body["returnURL"] = v
 	}
 	return body
 }

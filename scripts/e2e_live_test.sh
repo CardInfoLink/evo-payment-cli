@@ -378,6 +378,14 @@ if [[ -n "$TOK_VALUE" ]]; then
   OUT=$(run_cli "$CLI" api DELETE "/g2/v1/payment/mer/${SID}/paymentMethod?token=${TOK_VALUE}" \
     --data '{"initiatingReason":"e2e test cleanup"}') || true
   assert_ok_or_expected "$OUT" "DELETE paymentMethod delete (token lifecycle)"
+
+  # Step 5: token +create with --allow-authentication
+  sleep 2
+  OUT=$(run_cli "$CLI" token +create --payment-type card --vault-id "${TEST_VAULT_ID}" \
+    --user-reference e2e-test-user \
+    --card-number "${TEST_CARD_NUMBER}" --card-expiry "${TEST_CARD_EXPIRY}" --card-cvc "${TEST_CARD_CVC}" \
+    --allow-authentication true --return-url "https://example.com/callback") || true
+  assert_ok_or_expected "$OUT" "token +create --allow-authentication"
 else
   echo "  ⚠️  [skip] token create failed — skipping query/update/delete"
 fi
@@ -399,6 +407,11 @@ nt=d.get('data',{}).get('paymentMethod',{}).get('networkToken',{})
 print(nt.get('tokenID',''))
 ")
   NETWORK_TOKEN_ID="${NETWORK_TOKEN_ID:-}"
+  NETWORK_TOKEN_EXPIRY=$(jq? "$OUT" "
+nt=d.get('data',{}).get('paymentMethod',{}).get('networkToken',{})
+print(nt.get('expiryDate',''))
+") || NETWORK_TOKEN_EXPIRY=""
+  NETWORK_TOKEN_EXPIRY="${NETWORK_TOKEN_EXPIRY:-}"
   if [[ -n "$NETWORK_TOKEN_ID" ]]; then
     echo "  [info] networkTokenID: ${NETWORK_TOKEN_ID:0:40}..."
   fi
@@ -454,7 +467,7 @@ print(nt.get('paymentBrand',''))
 nt=d.get('data',{}).get('paymentMethod',{}).get('networkToken',{})
 print(nt.get('expiryDate',''))
 ") || SC_NT_EXPIRY=""
-  SC_NT_EXPIRY="${SC_NT_EXPIRY:-}"
+  SC_NT_EXPIRY="${SC_NT_EXPIRY:-$NETWORK_TOKEN_EXPIRY}"
 
   # Step 4: cryptogram +query shortcut
   if [[ -n "$SC_CRYPTO_TX" ]]; then

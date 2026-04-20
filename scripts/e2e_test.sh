@@ -298,6 +298,11 @@ assert_contains "$OUT" '"method": "POST"' "token +create new flags dry-run → P
 assert_contains "$OUT" "paymentMethod" "token +create new flags dry-run → path contains paymentMethod"
 assert_contains "$OUT" "networkTokenOnly" "token +create new flags dry-run → body contains networkTokenOnly"
 
+# token +create with --allow-authentication
+OUT=$("$CLI" token +create --payment-type card --vault-id V001 --user-reference user@test.com --allow-authentication true --dry-run 2>&1)
+assert_contains "$OUT" '"method": "POST"' "token +create --allow-authentication dry-run → POST"
+assert_contains "$OUT" "allowAuthentication" "token +create --allow-authentication dry-run → body contains allowAuthentication"
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo ""
 echo "▸ 16. Token shortcuts — validation"

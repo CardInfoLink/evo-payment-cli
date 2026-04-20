@@ -184,6 +184,30 @@ func TestCreate_DryRun_WithCardInfo(t *testing.T) {
 	}
 }
 
+func TestCreate_DryRun_WithAllowAuthentication(t *testing.T) {
+	ios, out, _ := newTestIO()
+	f := &stubFactory{config: newTestConfig(), io: ios}
+	root := buildCmd(f, CreateShortcut())
+	root.SetArgs([]string{"token", "+create",
+		"--payment-type", "card",
+		"--vault-id", "V001",
+		"--user-reference", "user@example.com",
+		"--allow-authentication", "true",
+		"--dry-run",
+	})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var result map[string]interface{}
+	if err := json.Unmarshal(out.Bytes(), &result); err != nil {
+		t.Fatalf("invalid JSON: %v\nraw: %s", err, out.String())
+	}
+	body, _ := result["body"].(map[string]interface{})
+	if body["allowAuthentication"] != true {
+		t.Errorf("body.allowAuthentication = %v, want true", body["allowAuthentication"])
+	}
+}
+
 func TestQuery_DryRun(t *testing.T) {
 	ios, out, _ := newTestIO()
 	f := &stubFactory{config: newTestConfig(), io: ios}
