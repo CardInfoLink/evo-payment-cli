@@ -49,7 +49,7 @@ release: test-all
 	read NEW_VERSION; \
 	if [ -z "$$NEW_VERSION" ]; then echo "Error: version cannot be empty"; exit 1; fi; \
 	case "$$NEW_VERSION" in v*) ;; *) NEW_VERSION="v$$NEW_VERSION";; esac; \
-	git tag -a $$NEW_VERSION -m "Release $$NEW_VERSION"; \
+	git tag -fa $$NEW_VERSION -m "Release $$NEW_VERSION"; \
 	echo "Tagged $$NEW_VERSION, building release with goreleaser..."; \
 	goreleaser release --clean
 
