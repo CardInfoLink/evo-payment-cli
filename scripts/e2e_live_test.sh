@@ -632,7 +632,17 @@ else
   echo "  ⚠️  [skip] token +create did not return merchantTransID — skipping +query"
 fi
 
-# Step 3: token +delete (uses token value)
+# Step 3: payment +pay with gateway token
+if [[ -n "$SC_TOK_VALUE" ]]; then
+  sleep 2
+  OUT=$(run_cli "$CLI" payment +pay --amount 1.00 --currency USD \
+    --gateway-token "$SC_TOK_VALUE") || true
+  assert_ok_or_expected "$OUT" "payment +pay --gateway-token"
+else
+  echo "  ⚠️  [skip] token +create failed — skipping payment +pay --gateway-token"
+fi
+
+# Step 4: token +delete (uses token value)
 if [[ -n "$SC_TOK_VALUE" ]]; then
   sleep 2
   OUT=$(run_cli "$CLI" token +delete --token-id "$SC_TOK_VALUE" --yes) || true

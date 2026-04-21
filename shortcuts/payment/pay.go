@@ -19,8 +19,9 @@ func PayShortcut() shortcuts.Shortcut {
 		Flags: []shortcuts.Flag{
 			{Name: "amount", Desc: "Payment amount", Required: true},
 			{Name: "currency", Desc: "Currency code (e.g. USD, EUR)", Required: true},
-			{Name: "payment-brand", Desc: "Payment brand (e.g. VISA, Alipay)", Required: true},
-			{Name: "payment-type", Desc: "Payment type", Default: "e-wallet", Enum: []string{"card", "e-wallet", "onlineBanking", "bankTransfer"}},
+			{Name: "payment-brand", Desc: "Payment brand (e.g. VISA, Alipay)"},
+			{Name: "payment-type", Desc: "Payment type", Default: "e-wallet", Enum: []string{"card", "e-wallet", "onlineBanking", "bankTransfer", "token"}},
+			{Name: "gateway-token", Desc: "Gateway token value (sets payment-type to token automatically)"},
 			{Name: "platform", Desc: "Platform type", Default: "WEB", Enum: []string{"WEB", "APP", "WAP", "MINI"}},
 			{Name: "merchant-tx-id", Desc: "Merchant transaction ID"},
 			{Name: "webhook", Desc: "Webhook notification URL"},
@@ -51,9 +52,18 @@ func buildPayBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 
 	paymentType := rt.Str("payment-type")
 	brand := rt.Str("payment-brand")
+	tokenValue := rt.Str("gateway-token")
+
+	// --token implies payment-type=token
+	if tokenValue != "" {
+		paymentType = "token"
+	}
 
 	pm := map[string]interface{}{"type": paymentType}
 	switch paymentType {
+	case "token":
+		tokenObj := map[string]interface{}{"value": tokenValue}
+		pm["token"] = tokenObj
 	case "e-wallet":
 		pm["e-wallet"] = map[string]interface{}{"paymentBrand": brand}
 	case "card":

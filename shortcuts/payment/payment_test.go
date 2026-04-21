@@ -173,6 +173,34 @@ func TestPay_MissingRequired(t *testing.T) {
 	}
 }
 
+func TestPay_GatewayToken_DryRun(t *testing.T) {
+	ios, out, _ := mkIO()
+	f := &stubFactory{config: mkCfg(), ios: ios}
+	root := mkCmd(f, PayShortcut())
+	root.SetArgs([]string{"payment", "+pay",
+		"--amount", "10.00", "--currency", "USD",
+		"--gateway-token", "pmt_abc123",
+		"--dry-run",
+	})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	var r map[string]interface{}
+	json.Unmarshal(out.Bytes(), &r)
+	if r["method"] != "POST" {
+		t.Errorf("method=%v", r["method"])
+	}
+	body, _ := r["body"].(map[string]interface{})
+	pm, _ := body["paymentMethod"].(map[string]interface{})
+	if pm["type"] != "token" {
+		t.Errorf("paymentMethod.type = %v, want token", pm["type"])
+	}
+	tok, _ := pm["token"].(map[string]interface{})
+	if tok["value"] != "pmt_abc123" {
+		t.Errorf("token.value = %v, want pmt_abc123", tok["value"])
+	}
+}
+
 func TestPay_InvalidEnum(t *testing.T) {
 	ios, _, _ := mkIO()
 	f := &stubFactory{config: mkCfg(), ios: ios}

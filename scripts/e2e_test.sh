@@ -226,6 +226,12 @@ assert_contains "$OUT" '"method": "POST"' "payment +pay dry-run → POST"
 assert_contains "$OUT" "payment" "payment +pay dry-run → path contains payment"
 assert_contains "$OUT" "Alipay" "payment +pay dry-run → body contains Alipay"
 
+# payment +pay with gateway token
+OUT=$("$CLI" payment +pay --amount 10 --currency USD --gateway-token pmt_abc123 --dry-run 2>&1)
+assert_contains "$OUT" '"method": "POST"' "payment +pay gateway token dry-run → POST"
+assert_contains "$OUT" '"type": "token"' "payment +pay gateway token dry-run → paymentMethod.type=token"
+assert_contains "$OUT" "pmt_abc123" "payment +pay gateway token dry-run → body contains token value"
+
 OUT=$("$CLI" payment +query --merchant-tx-id TX001 --dry-run 2>&1)
 assert_contains "$OUT" '"method": "GET"' "payment +query dry-run → GET"
 assert_contains "$OUT" "TX001" "payment +query dry-run → URL contains TX001"
