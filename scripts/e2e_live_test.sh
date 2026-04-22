@@ -565,6 +565,19 @@ assert_ok_or_expected "$OUT" "payment +pay (cancel sub-chain)"
 sleep 2
 OUT=$(run_cli "$CLI" payment +cancel --original-merchant-tx-id "$SC_PAY_TX_CAN" --yes) || true
 assert_ok_or_expected "$OUT" "payment +cancel"
+SC_CAN_TX=$(jq? "$OUT" "
+c=d.get('data',{}).get('cancel',d.get('data',{}))
+mt=c.get('merchantTransInfo',{})
+print(mt.get('merchantTransID',''))
+") || SC_CAN_TX=""
+SC_CAN_TX="${SC_CAN_TX:-}"
+
+# Step 5b: payment +cancel-query
+if [[ -n "$SC_CAN_TX" ]]; then
+  sleep 2
+  OUT=$(run_cli "$CLI" payment +cancel-query --merchant-tx-id "$SC_CAN_TX") || true
+  assert_ok_or_expected "$OUT" "payment +cancel-query"
+fi
 
 # --- Refund sub-chain ---
 # Step 6: payment +refund (references captured SC_PAY_TX_CAP)
@@ -854,6 +867,19 @@ sleep 2
 OUT=$(run_cli "$CLI" payment +cancel \
   --original-merchant-tx-id "$GW_CAN_TX" --yes) || true
 assert_ok_or_expected "$OUT" "payment +cancel (gateway token payment)"
+GW_CAN_CANCEL_TX=$(jq? "$OUT" "
+c=d.get('data',{}).get('cancel',d.get('data',{}))
+mt=c.get('merchantTransInfo',{})
+print(mt.get('merchantTransID',''))
+") || GW_CAN_CANCEL_TX=""
+GW_CAN_CANCEL_TX="${GW_CAN_CANCEL_TX:-}"
+
+# Step 12: Query cancel
+if [[ -n "$GW_CAN_CANCEL_TX" ]]; then
+  sleep 2
+  OUT=$(run_cli "$CLI" payment +cancel-query --merchant-tx-id "$GW_CAN_CANCEL_TX") || true
+  assert_ok_or_expected "$OUT" "payment +cancel-query (gateway token payment)"
+fi
 
 # ── 23. Cleanup ──────────────────────────────────────────────────
 echo ""; echo "▸ 23. Cleanup"

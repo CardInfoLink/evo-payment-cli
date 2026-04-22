@@ -80,8 +80,8 @@ func errHandler(w http.ResponseWriter, _ *http.Request) {
 
 func TestAllShortcuts_Count(t *testing.T) {
 	all := AllShortcuts()
-	if len(all) != 7 {
-		t.Errorf("expected 7, got %d", len(all))
+	if len(all) != 8 {
+		t.Errorf("expected 8, got %d", len(all))
 	}
 }
 
@@ -288,6 +288,23 @@ func TestCaptureQuery_DryRun(t *testing.T) {
 	url, _ := r["url"].(string)
 	if !strings.Contains(url, "/capture") {
 		t.Errorf("url should contain /capture, got: %s", url)
+	}
+}
+
+func TestCancelQuery_DryRun(t *testing.T) {
+	ios, out, _ := mkIO()
+	f := &stubFactory{config: mkCfg(), ios: ios}
+	root := mkCmd(f, CancelQueryShortcut())
+	root.SetArgs([]string{"payment", "+cancel-query", "--merchant-tx-id", "TX1", "--dry-run"})
+	root.Execute()
+	var r map[string]interface{}
+	json.Unmarshal(out.Bytes(), &r)
+	if r["method"] != "GET" {
+		t.Errorf("method=%v", r["method"])
+	}
+	url, _ := r["url"].(string)
+	if !strings.Contains(url, "/cancel") {
+		t.Errorf("url should contain /cancel, got: %s", url)
 	}
 }
 

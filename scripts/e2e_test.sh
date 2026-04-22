@@ -249,6 +249,10 @@ OUT=$("$CLI" payment +capture-query --merchant-tx-id TX001 --dry-run 2>&1)
 assert_contains "$OUT" '"method": "GET"' "payment +capture-query dry-run → GET"
 assert_contains "$OUT" "/capture" "payment +capture-query dry-run → path contains /capture"
 
+OUT=$("$CLI" payment +cancel-query --merchant-tx-id TX001 --dry-run 2>&1)
+assert_contains "$OUT" '"method": "GET"' "payment +cancel-query dry-run → GET"
+assert_contains "$OUT" "/cancel" "payment +cancel-query dry-run → path contains /cancel"
+
 OUT=$("$CLI" payment +refund-query --merchant-tx-id TX001 --dry-run 2>&1)
 assert_contains "$OUT" '"method": "GET"' "payment +refund-query dry-run → GET"
 assert_contains "$OUT" "/refund" "payment +refund-query dry-run → path contains /refund"
