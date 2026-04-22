@@ -26,6 +26,7 @@ func PayShortcut() shortcuts.Shortcut {
 			{Name: "merchant-tx-id", Desc: "Merchant transaction ID"},
 			{Name: "webhook", Desc: "Webhook notification URL"},
 			{Name: "return-url", Desc: "Return URL after payment"},
+			{Name: "allow-authentication", Desc: "Allow 3DS authentication during payment (true/false)"},
 		},
 		DryRun: func(ctx context.Context, rt *shortcuts.RuntimeContext) error {
 			path := fmt.Sprintf("/g2/v1/payment/mer/%s/payment", rt.Config.MerchantSid)
@@ -91,6 +92,9 @@ func buildPayBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 	}
 	if v := rt.Str("return-url"); v != "" {
 		body["returnURL"] = v
+	}
+	if rt.Str("allow-authentication") == "true" {
+		body["allowAuthentication"] = true
 	}
 	// tradeInfo is required when paymentBrand is Alipay
 	if brand == "Alipay" {

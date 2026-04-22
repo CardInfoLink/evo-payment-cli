@@ -1,6 +1,6 @@
 {
   "name": "@evopayment/cli",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Evo Payment CLI — AI Agent interface for Evo Payment APIs",
   "bin": {
     "evo-cli": "scripts/run.js"

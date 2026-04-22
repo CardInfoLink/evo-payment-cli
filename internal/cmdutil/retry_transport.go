@@ -51,6 +51,11 @@ func (t *RetryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	var resp *http.Response
 	var lastErr error
 
+	// POST requests are not idempotent — never retry them.
+	if req.Method == http.MethodPost {
+		maxRetries = 0
+	}
+
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		if attempt > 0 {
 			// Exponential backoff: 1s * 2^(attempt-1) → 1s, 2s, 4s

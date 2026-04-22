@@ -79,7 +79,7 @@ func TestRetryTransport_RetriesOn500(t *testing.T) {
 	}
 	rt := &RetryTransport{Base: ct, MaxRetries: 3, sleepFunc: func(d time.Duration) {}}
 
-	req, _ := http.NewRequest("POST", "https://example.com/test", strings.NewReader(`{"a":1}`))
+	req, _ := http.NewRequest("GET", "https://example.com/test", nil)
 	r, err := rt.RoundTrip(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -117,7 +117,7 @@ func TestRetryTransport_MaxRetriesExhausted(t *testing.T) {
 	}
 	rt := &RetryTransport{Base: ct, MaxRetries: 3, sleepFunc: func(d time.Duration) {}}
 
-	req, _ := http.NewRequest("POST", "https://example.com/test", strings.NewReader(`{}`))
+	req, _ := http.NewRequest("GET", "https://example.com/test", nil)
 	r, err := rt.RoundTrip(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -181,7 +181,7 @@ func TestRetryTransport_NoRetryOn4xx(t *testing.T) {
 	}
 	rt := &RetryTransport{Base: ct, MaxRetries: 3, sleepFunc: func(d time.Duration) {}}
 
-	req, _ := http.NewRequest("POST", "https://example.com/test", strings.NewReader(`{}`))
+	req, _ := http.NewRequest("GET", "https://example.com/test", nil)
 	r, err := rt.RoundTrip(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -242,7 +242,7 @@ func TestRetryTransport_BodyPreservedOnRetry(t *testing.T) {
 	}
 	rt := &RetryTransport{Base: ct, MaxRetries: 3, sleepFunc: func(d time.Duration) {}}
 
-	req, _ := http.NewRequest("POST", "https://example.com/test", strings.NewReader(`{"key":"value"}`))
+	req, _ := http.NewRequest("PUT", "https://example.com/test", strings.NewReader(`{"key":"value"}`))
 	_, err := rt.RoundTrip(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -268,6 +268,40 @@ func TestRetryTransport_DefaultMaxRetries(t *testing.T) {
 
 	if ct.calls != 4 {
 		t.Errorf("calls = %d, want 4 (default MaxRetries=3 → 1+3=4)", ct.calls)
+	}
+}
+
+func TestRetryTransport_NoRetryOnPost(t *testing.T) {
+	ct := &countingTransport{
+		responses: []*http.Response{resp(500), resp(200)},
+	}
+	rt := &RetryTransport{Base: ct, MaxRetries: 3, sleepFunc: func(d time.Duration) {}}
+
+	req, _ := http.NewRequest("POST", "https://example.com/test", strings.NewReader(`{}`))
+	r, err := rt.RoundTrip(req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if r.StatusCode != 500 {
+		t.Errorf("StatusCode = %d, want 500", r.StatusCode)
+	}
+	if ct.calls != 1 {
+		t.Errorf("calls = %d, want 1 (POST must not retry)", ct.calls)
+	}
+}
+
+func TestRetryTransport_NoRetryOnPostTimeout(t *testing.T) {
+	ct := &mockRoundTripper{
+		fn: func(req *http.Request) (*http.Response, error) {
+			return nil, &timeoutError{}
+		},
+	}
+	rt := &RetryTransport{Base: ct, MaxRetries: 3, sleepFunc: func(d time.Duration) {}}
+
+	req, _ := http.NewRequest("POST", "https://example.com/test", strings.NewReader(`{}`))
+	_, err := rt.RoundTrip(req)
+	if err == nil {
+		t.Fatal("expected timeout error, got nil")
 	}
 }
 
@@ -334,7 +368,7 @@ func TestProperty24_RetryTransportBehavior(t *testing.T) {
 			},
 		}
 
-		req, _ := http.NewRequest("POST", "https://example.com/test", strings.NewReader(`{}`))
+		req, _ := http.NewRequest("GET", "https://example.com/test", nil)
 		rt.RoundTrip(req)
 
 		// Total calls must never exceed 4 (1 original + 3 retries)
@@ -393,7 +427,7 @@ func TestRetryTransport_LastAttemptBodyReadable(t *testing.T) {
 	}
 	rt := &RetryTransport{Base: ct, MaxRetries: 3, sleepFunc: func(d time.Duration) {}}
 
-	req, _ := http.NewRequest("POST", "https://example.com/test", strings.NewReader(`{}`))
+	req, _ := http.NewRequest("PUT", "https://example.com/test", strings.NewReader(`{}`))
 	r, err := rt.RoundTrip(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

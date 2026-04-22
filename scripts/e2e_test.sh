@@ -245,6 +245,14 @@ assert_contains "$OUT" "cancel" "payment +cancel dry-run → path contains cance
 OUT=$("$CLI" payment +refund --original-merchant-tx-id TX001 --amount 25 --currency USD --yes --dry-run 2>&1)
 assert_contains "$OUT" "refund" "payment +refund dry-run → path contains refund"
 
+OUT=$("$CLI" payment +capture-query --merchant-tx-id TX001 --dry-run 2>&1)
+assert_contains "$OUT" '"method": "GET"' "payment +capture-query dry-run → GET"
+assert_contains "$OUT" "/capture" "payment +capture-query dry-run → path contains /capture"
+
+OUT=$("$CLI" payment +refund-query --merchant-tx-id TX001 --dry-run 2>&1)
+assert_contains "$OUT" '"method": "GET"' "payment +refund-query dry-run → GET"
+assert_contains "$OUT" "/refund" "payment +refund-query dry-run → path contains /refund"
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo ""
 echo "▸ 12. Payment shortcuts — validation"

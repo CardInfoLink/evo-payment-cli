@@ -80,8 +80,8 @@ func errHandler(w http.ResponseWriter, _ *http.Request) {
 
 func TestAllShortcuts_Count(t *testing.T) {
 	all := AllShortcuts()
-	if len(all) != 5 {
-		t.Errorf("expected 5, got %d", len(all))
+	if len(all) != 7 {
+		t.Errorf("expected 7, got %d", len(all))
 	}
 }
 
@@ -201,6 +201,31 @@ func TestPay_GatewayToken_DryRun(t *testing.T) {
 	}
 }
 
+func TestPay_AllowAuthentication_DryRun(t *testing.T) {
+	ios, out, _ := mkIO()
+	f := &stubFactory{config: mkCfg(), ios: ios}
+	root := mkCmd(f, PayShortcut())
+	root.SetArgs([]string{"payment", "+pay",
+		"--amount", "10.00", "--currency", "USD",
+		"--gateway-token", "pmt_abc123",
+		"--allow-authentication", "true",
+		"--return-url", "https://example.com/callback",
+		"--dry-run",
+	})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	var r map[string]interface{}
+	json.Unmarshal(out.Bytes(), &r)
+	body, _ := r["body"].(map[string]interface{})
+	if body["allowAuthentication"] != true {
+		t.Errorf("body.allowAuthentication = %v, want true", body["allowAuthentication"])
+	}
+	if body["returnURL"] != "https://example.com/callback" {
+		t.Errorf("body.returnURL = %v, want https://example.com/callback", body["returnURL"])
+	}
+}
+
 func TestPay_InvalidEnum(t *testing.T) {
 	ios, _, _ := mkIO()
 	f := &stubFactory{config: mkCfg(), ios: ios}
@@ -246,6 +271,40 @@ func TestQuery_MissingRequired(t *testing.T) {
 	root.SetArgs([]string{"payment", "+query"})
 	if err := root.Execute(); err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestCaptureQuery_DryRun(t *testing.T) {
+	ios, out, _ := mkIO()
+	f := &stubFactory{config: mkCfg(), ios: ios}
+	root := mkCmd(f, CaptureQueryShortcut())
+	root.SetArgs([]string{"payment", "+capture-query", "--merchant-tx-id", "TX1", "--dry-run"})
+	root.Execute()
+	var r map[string]interface{}
+	json.Unmarshal(out.Bytes(), &r)
+	if r["method"] != "GET" {
+		t.Errorf("method=%v", r["method"])
+	}
+	url, _ := r["url"].(string)
+	if !strings.Contains(url, "/capture") {
+		t.Errorf("url should contain /capture, got: %s", url)
+	}
+}
+
+func TestRefundQuery_DryRun(t *testing.T) {
+	ios, out, _ := mkIO()
+	f := &stubFactory{config: mkCfg(), ios: ios}
+	root := mkCmd(f, RefundQueryShortcut())
+	root.SetArgs([]string{"payment", "+refund-query", "--merchant-tx-id", "TX1", "--dry-run"})
+	root.Execute()
+	var r map[string]interface{}
+	json.Unmarshal(out.Bytes(), &r)
+	if r["method"] != "GET" {
+		t.Errorf("method=%v", r["method"])
+	}
+	url, _ := r["url"].(string)
+	if !strings.Contains(url, "/refund") {
+		t.Errorf("url should contain /refund, got: %s", url)
 	}
 }
 

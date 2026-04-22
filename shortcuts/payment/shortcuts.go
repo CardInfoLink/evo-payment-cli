@@ -11,7 +11,7 @@ import (
 // If a "payment" command already exists (e.g., from service registration), shortcuts
 // are mounted onto it. Otherwise a new parent command is created.
 func RegisterShortcuts(rootCmd *cobra.Command, f cmdutil.Factory) {
-	parent := findOrCreateSubcommand(rootCmd, "payment", "Payment commands (+pay, +query, +capture, +cancel, +refund)")
+	parent := findOrCreateSubcommand(rootCmd, "payment", "Payment commands (+pay, +query, +capture, +capture-query, +cancel, +refund, +refund-query)")
 	shortcuts.Mount(parent, f, AllShortcuts())
 }
 
@@ -33,7 +33,9 @@ func AllShortcuts() []shortcuts.Shortcut {
 		PayShortcut(),
 		QueryShortcut(),
 		CaptureShortcut(),
+		CaptureQueryShortcut(),
 		CancelShortcut(),
 		RefundShortcut(),
+		RefundQueryShortcut(),
 	}
 }

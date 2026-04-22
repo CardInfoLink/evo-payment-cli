@@ -15,6 +15,7 @@ for v in EVO_MERCHANT_SID EVO_SIGN_KEY EVO_SIGN_TYPE EVO_API_BASE_URL EVO_LINKPA
   [[ -n "${!v:-}" ]] || { echo "FATAL: $v not set"; exit 1; }
 done
 
+REAL_HOME="$HOME"
 export HOME; HOME="$(mktemp -d)"; trap 'rm -rf "$HOME"' EXIT
 export EVO_SIGN_KEY EVO_API_BASE_URL EVO_LINKPAY_BASE_URL
 
@@ -693,8 +694,169 @@ else
   fail "-o flag → file not created"
 fi
 
-# ── 21. Cleanup ──────────────────────────────────────────────────
-echo ""; echo "▸ 21. Cleanup"
+# ── 22. Gateway Token Full Payment Lifecycle ─────────────────────
+echo ""; echo "▸ 22. Gateway Token Full Payment Lifecycle"
+
+# Step 1: token +create with 3DS authentication
+TDS_RETURN_URL="https://agent.everonet.com"
+OUT=$(run_cli "$CLI" token +create --payment-type card --vault-id "${TEST_VAULT_ID}" \
+  --user-reference e2e-3ds-user --email e2e-3ds@test.com \
+  --card-number "${TEST_CARD_NUMBER}" --card-expiry "${TEST_CARD_EXPIRY}" --card-cvc "${TEST_CARD_CVC}" \
+  --allow-authentication true --return-url "$TDS_RETURN_URL") || true
+
+TDS_TOKEN=""
+TDS_TX=""
+TDS_REDIRECT_URL=""
+
+# Check if we got an action (3DS redirect) or direct success
+TDS_HAS_ACTION=$(jq? "$OUT" "print('action' in d.get('data',{}))")
+TDS_OK=$(ok? "$OUT")
+
+if [[ "$TDS_OK" == "True" && "$TDS_HAS_ACTION" == "True" ]]; then
+  pass "token +create --allow-authentication → 3DS action returned"
+  TDS_REDIRECT_URL=$(jq? "$OUT" "
+a=d.get('data',{}).get('action',{}).get('threeDSData',{})
+print(a.get('url',''))
+") || TDS_REDIRECT_URL=""
+  TDS_REDIRECT_URL="${TDS_REDIRECT_URL:-}"
+  TDS_TX=$(jq? "$OUT" "
+pm=d.get('data',{}).get('paymentMethod',{})
+mt=pm.get('merchantTransInfo',d.get('data',{}).get('merchantTransInfo',{}))
+print(mt.get('merchantTransID',''))
+") || TDS_TX=""
+  TDS_TX="${TDS_TX:-}"
+  if [[ -n "$TDS_REDIRECT_URL" ]]; then
+    echo "  [info] 3DS redirect URL: ${TDS_REDIRECT_URL:0:80}..."
+  fi
+  if [[ -n "$TDS_TX" ]]; then
+    echo "  [info] merchantTransID: $TDS_TX"
+  fi
+elif [[ "$TDS_OK" == "True" ]]; then
+  pass "token +create --allow-authentication → direct success (no 3DS required)"
+  TDS_TOKEN=$(jq? "$OUT" "
+t=d.get('data',{}).get('paymentMethod',{}).get('token',{})
+print(t.get('value',''))
+") || TDS_TOKEN=""
+  TDS_TOKEN="${TDS_TOKEN:-}"
+else
+  assert_ok_or_expected "$OUT" "token +create --allow-authentication"
+fi
+
+# Step 2: Complete 3DS authentication via headless browser
+if [[ -n "$TDS_REDIRECT_URL" ]]; then
+  sleep 2
+  echo "  [info] Completing 3DS via headless browser..."
+  TDS_BROWSER_OUT=$(HOME="$REAL_HOME" python3 scripts/3ds_complete.py "$TDS_REDIRECT_URL" "$TDS_RETURN_URL" 60 2>&1) || true
+  TDS_FINAL_URL=$(echo "$TDS_BROWSER_OUT" | tail -1)
+  TDS_BROWSER_LOG=$(echo "$TDS_BROWSER_OUT" | sed '$d')
+  if [[ -n "$TDS_BROWSER_LOG" ]]; then
+    echo "$TDS_BROWSER_LOG" | while IFS= read -r line; do echo "  [3ds] $line"; done
+  fi
+  if [[ -n "$TDS_FINAL_URL" && "$TDS_FINAL_URL" == "$TDS_RETURN_URL"* ]]; then
+    if echo "$TDS_FINAL_URL" | grep -q "status=finished"; then
+      pass "3DS authentication completed (status=finished)"
+    else
+      warn "3DS redirected to returnURL but status is not finished: ${TDS_FINAL_URL:0:120}"
+    fi
+  elif [[ -n "$TDS_FINAL_URL" ]]; then
+    warn "3DS redirect ended at: ${TDS_FINAL_URL:0:80}... (may not have completed)"
+  else
+    warn "3DS headless browser failed — 3DS may not have completed"
+  fi
+
+  # Step 3: Query token after 3DS (wait for async processing)
+  if [[ -n "$TDS_TX" ]]; then
+    sleep 5
+    OUT=$(run_cli "$CLI" token +query --merchant-tx-id "$TDS_TX") || true
+    assert_ok_or_expected "$OUT" "token +query after 3DS"
+    if [[ -z "$TDS_TOKEN" ]]; then
+      TDS_TOKEN=$(jq? "$OUT" "
+t=d.get('data',{}).get('paymentMethod',{}).get('token',{})
+print(t.get('value',''))
+") || TDS_TOKEN=""
+      TDS_TOKEN="${TDS_TOKEN:-}"
+    fi
+  fi
+fi
+
+# Fallback: use pre-created gateway token if 3DS flow did not produce one
+if [[ -z "$TDS_TOKEN" ]]; then
+  TDS_TOKEN="pmt_23e7838c82eb429cb145815dcbedf3aa"
+  echo "  [info] Using pre-created gateway token: $TDS_TOKEN"
+fi
+
+# Step 4-11: Full payment lifecycle with gateway token
+echo "  [info] gateway token: ${TDS_TOKEN:0:40}..."
+
+# Step 4: Payment with gateway token
+sleep 2
+GW_PAY_TX="e2e_gw_pay_${RUN}"
+OUT=$(run_cli "$CLI" payment +pay --amount 10.00 --currency USD \
+  --gateway-token "$TDS_TOKEN" --merchant-tx-id "$GW_PAY_TX") || true
+assert_ok_or_expected "$OUT" "payment +pay with gateway token"
+
+# Step 5: Query payment
+sleep 2
+OUT=$(run_cli "$CLI" payment +query --merchant-tx-id "$GW_PAY_TX") || true
+assert_ok_or_expected "$OUT" "payment +query (gateway token payment)"
+
+# Step 6: Capture
+sleep 2
+OUT=$(run_cli "$CLI" payment +capture --amount 10.00 --currency USD \
+  --original-merchant-tx-id "$GW_PAY_TX") || true
+assert_ok_or_expected "$OUT" "payment +capture (gateway token payment)"
+GW_CAP_TX=$(jq? "$OUT" "
+c=d.get('data',{}).get('capture',d.get('data',{}))
+mt=c.get('merchantTransInfo',{})
+print(mt.get('merchantTransID',''))
+") || GW_CAP_TX=""
+GW_CAP_TX="${GW_CAP_TX:-}"
+
+# Step 7: Query capture
+if [[ -n "$GW_CAP_TX" ]]; then
+  sleep 2
+  OUT=$(run_cli "$CLI" payment +capture-query --merchant-tx-id "$GW_CAP_TX") || true
+  assert_ok_or_expected "$OUT" "payment +capture-query (gateway token payment)"
+else
+  echo "  ⚠️  [skip] No capture merchantTransID — skipping capture-query"
+fi
+
+# Step 8: Refund
+sleep 2
+OUT=$(run_cli "$CLI" payment +refund --amount 10.00 --currency USD \
+  --original-merchant-tx-id "$GW_PAY_TX" --yes) || true
+assert_ok_or_expected "$OUT" "payment +refund (gateway token payment)"
+GW_REF_TX=$(jq? "$OUT" "
+r=d.get('data',{}).get('refund',d.get('data',{}))
+mt=r.get('merchantTransInfo',{})
+print(mt.get('merchantTransID',''))
+") || GW_REF_TX=""
+GW_REF_TX="${GW_REF_TX:-}"
+
+# Step 9: Query refund
+if [[ -n "$GW_REF_TX" ]]; then
+  sleep 2
+  OUT=$(run_cli "$CLI" payment +refund-query --merchant-tx-id "$GW_REF_TX") || true
+  assert_ok_or_expected "$OUT" "payment +refund-query (gateway token payment)"
+else
+  echo "  ⚠️  [skip] No refund merchantTransID — skipping refund-query"
+fi
+
+# Step 10: New payment for cancel
+sleep 2
+GW_CAN_TX="e2e_gw_can_${RUN}"
+OUT=$(run_cli "$CLI" payment +pay --amount 5.00 --currency USD \
+  --gateway-token "$TDS_TOKEN" --merchant-tx-id "$GW_CAN_TX") || true
+assert_ok_or_expected "$OUT" "payment +pay for cancel (gateway token)"
+
+# Step 11: Cancel
+sleep 2
+OUT=$(run_cli "$CLI" payment +cancel \
+  --original-merchant-tx-id "$GW_CAN_TX" --yes) || true
+assert_ok_or_expected "$OUT" "payment +cancel (gateway token payment)"
+
+# ── 23. Cleanup ──────────────────────────────────────────────────
+echo ""; echo "▸ 23. Cleanup"
 OUT=$(run_cli "$CLI" config remove)
 assert_ok "$OUT" "config remove"
 
