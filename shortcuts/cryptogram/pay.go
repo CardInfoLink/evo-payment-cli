@@ -26,6 +26,7 @@ func PayShortcut() shortcuts.Shortcut {
 			{Name: "currency", Desc: "Currency code (e.g. USD)", Required: true},
 			{Name: "wallet-identifiers", Desc: "Wallet identifiers (default: MDESForMerchants for Mastercard)"},
 			{Name: "merchant-tx-id", Desc: "Merchant transaction ID"},
+			{Name: "auto-capture", Desc: "Auto capture after authorization (true/false)"},
 			{Name: "return-url", Desc: "Return URL after payment"},
 			{Name: "webhook", Desc: "Webhook notification URL"},
 		},
@@ -49,6 +50,7 @@ func buildPayBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 	txID := rt.Str("merchant-tx-id")
 	if txID == "" {
 		txID = fmt.Sprintf("ntpay_%d", time.Now().Unix())
+		rt.Flags["merchant-tx-id"] = txID
 	}
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 
@@ -80,6 +82,9 @@ func buildPayBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 	}
 	if v := rt.Str("webhook"); v != "" {
 		body["webhook"] = v
+	}
+	if rt.Str("auto-capture") == "true" {
+		body["captureAfterHours"] = "0"
 	}
 	return body
 }

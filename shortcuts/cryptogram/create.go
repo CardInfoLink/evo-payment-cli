@@ -19,6 +19,7 @@ func CreateShortcut() shortcuts.Shortcut {
 		Flags: []shortcuts.Flag{
 			{Name: "network-token-id", Desc: "Network token ID from card scheme", Required: true},
 			{Name: "original-merchant-tx-id", Desc: "merchantTransID of the original tokenization request", Required: true},
+			{Name: "merchant-tx-id", Desc: "Merchant transaction ID for this cryptogram request (auto-generated if omitted)"},
 		},
 		DryRun: func(ctx context.Context, rt *shortcuts.RuntimeContext) error {
 			path := fmt.Sprintf("/g2/v1/payment/mer/%s/cryptogram", rt.Config.MerchantSid)
@@ -39,7 +40,11 @@ func CreateShortcut() shortcuts.Shortcut {
 
 func buildCreateBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
-	txID := fmt.Sprintf("crypto_%d", time.Now().Unix())
+	txID := rt.Str("merchant-tx-id")
+	if txID == "" {
+		txID = fmt.Sprintf("crypto_%d", time.Now().Unix())
+		rt.Flags["merchant-tx-id"] = txID
+	}
 	return map[string]interface{}{
 		"merchantTransInfo": map[string]interface{}{
 			"merchantTransID":   txID,

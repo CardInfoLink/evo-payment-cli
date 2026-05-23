@@ -425,7 +425,7 @@ if [[ -n "$NETWORK_TOKEN_ID" ]]; then
   sleep 2
   CRYPTO_TX="e2e_crypto_${RUN}"
   CRYPTO_BODY="{\"merchantTransInfo\":{\"merchantTransID\":\"${CRYPTO_TX}\",\"merchantTransTime\":\"${NOW}\"},\"paymentMethod\":{\"type\":\"networkToken\",\"networkToken\":{\"tokenID\":\"${NETWORK_TOKEN_ID}\"}}}"
-  OUT=$(run_cli "$CLI" api POST "/g2/v1/payment/mer/${SID}/cryptogram?merchantTransID=${CRYPTO_TX}" --data "$CRYPTO_BODY") || true
+  OUT=$(run_cli "$CLI" api POST "/g2/v1/payment/mer/${SID}/cryptogram?merchantTransID=${NT_TX}" --data "$CRYPTO_BODY") || true
   assert_ok_or_expected "$OUT" "POST cryptogram"
 
   # Step 2: GET /cryptogram — query cryptogram
@@ -483,16 +483,19 @@ print(nt.get('expiryDate',''))
   fi
 
   # Step 5: cryptogram +pay shortcut — pay with network token + cryptogram
+  # Also tests --auto-capture and --merchant-tx-id (idempotency key)
   if [[ -n "$SC_TOKEN_CRYPTOGRAM" && -n "$SC_ECI" && -n "$SC_NT_VALUE" && -n "$SC_NT_BRAND" && -n "$SC_NT_EXPIRY" ]]; then
     sleep 2
+    CRYPTO_PAY_TX="e2e_cpay_${RUN}"
     OUT=$(run_cli "$CLI" cryptogram +pay \
       --network-token-value "$SC_NT_VALUE" \
       --token-expiry-date "$SC_NT_EXPIRY" \
       --token-cryptogram "$SC_TOKEN_CRYPTOGRAM" \
       --eci "$SC_ECI" \
       --payment-brand "$SC_NT_BRAND" \
-      --amount 1.00 --currency USD) || true
-    assert_ok_or_expected "$OUT" "cryptogram +pay shortcut"
+      --amount 1.00 --currency USD \
+      --merchant-tx-id "$CRYPTO_PAY_TX" --auto-capture true) || true
+    assert_ok_or_expected "$OUT" "cryptogram +pay --auto-capture --merchant-tx-id"
   else
     echo "  ⚠️  [skip] No cryptogram/eci/value/brand available — skipping +pay"
   fi
@@ -880,6 +883,13 @@ if [[ -n "$GW_CAN_CANCEL_TX" ]]; then
   OUT=$(run_cli "$CLI" payment +cancel-query --merchant-tx-id "$GW_CAN_CANCEL_TX") || true
   assert_ok_or_expected "$OUT" "payment +cancel-query (gateway token payment)"
 fi
+
+# Step 13: Payment with --auto-capture (captureAfterHours=0)
+sleep 2
+GW_AC_TX="e2e_gw_ac_${RUN}"
+OUT=$(run_cli "$CLI" payment +pay --amount 2.00 --currency USD \
+  --gateway-token "$TDS_TOKEN" --merchant-tx-id "$GW_AC_TX" --auto-capture true) || true
+assert_ok_or_expected "$OUT" "payment +pay --auto-capture (gateway token)"
 
 # ── 23. Cleanup ──────────────────────────────────────────────────
 echo ""; echo "▸ 23. Cleanup"

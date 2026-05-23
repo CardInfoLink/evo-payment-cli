@@ -64,12 +64,20 @@ func (rt *RuntimeContext) Bool(name string) bool {
 }
 
 // DoJSON calls EvoClient.CallAPI and returns the parsed response body.
+// For POST requests, if the RuntimeContext has a "merchant-tx-id" flag value,
+// it is injected as the Idempotency-Key header via context.
 func (rt *RuntimeContext) DoJSON(method, path string, params map[string]string, body interface{}) (map[string]interface{}, error) {
 	client, err := rt.Factory.EvoClient()
 	if err != nil {
 		return nil, err
 	}
-	envelope, err := client.CallAPI(method, path, params, body)
+	ctx := context.Background()
+	if method == "POST" {
+		if key := rt.Str("merchant-tx-id"); key != "" {
+			ctx = cmdutil.WithIdempotencyKey(ctx, key)
+		}
+	}
+	envelope, err := client.CallAPIWithContext(ctx, method, path, params, body)
 	if err != nil {
 		return nil, err
 	}

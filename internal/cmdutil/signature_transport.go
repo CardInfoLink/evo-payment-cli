@@ -98,7 +98,8 @@ func (t *SignatureTransport) RoundTrip(req *http.Request) (*http.Response, error
 		req.Header.Set("KeyID", cfg.KeyID)
 	}
 
-	// 8. For PUT/DELETE: inject Idempotency-Key header.
+	// 8. For PUT/DELETE: inject Idempotency-Key header (auto-generated).
+	// For POST: inject Idempotency-Key only if provided via context (merchant-tx-id).
 	if req.Method == http.MethodPut || req.Method == http.MethodDelete {
 		idempotencyKey := idempotencyKeyFromContext(req.Context())
 		if idempotencyKey == "" {
@@ -108,6 +109,10 @@ func (t *SignatureTransport) RoundTrip(req *http.Request) (*http.Response, error
 			}
 		}
 		req.Header.Set("Idempotency-Key", idempotencyKey)
+	} else if req.Method == http.MethodPost {
+		if idempotencyKey := idempotencyKeyFromContext(req.Context()); idempotencyKey != "" {
+			req.Header.Set("Idempotency-Key", idempotencyKey)
+		}
 	}
 
 	// 9. Send request via Base transport.

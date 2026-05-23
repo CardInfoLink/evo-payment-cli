@@ -21,6 +21,7 @@ func RefundShortcut() shortcuts.Shortcut {
 			{Name: "original-merchant-tx-id", Desc: "Original merchant transaction ID", Required: true},
 			{Name: "amount", Desc: "Refund amount", Required: true},
 			{Name: "currency", Desc: "Currency code", Required: true},
+			{Name: "merchant-tx-id", Desc: "Merchant transaction ID for this refund (auto-generated if omitted)"},
 		},
 		DryRun: func(ctx context.Context, rt *shortcuts.RuntimeContext) error {
 			path := fmt.Sprintf("/g2/v1/payment/mer/%s/refund", rt.Config.MerchantSid)
@@ -40,10 +41,15 @@ func RefundShortcut() shortcuts.Shortcut {
 }
 
 func buildRefundBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
+	txID := rt.Str("merchant-tx-id")
+	if txID == "" {
+		txID = fmt.Sprintf("ref_%d", time.Now().Unix())
+		rt.Flags["merchant-tx-id"] = txID
+	}
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	return map[string]interface{}{
 		"merchantTransInfo": map[string]interface{}{
-			"merchantTransID":   fmt.Sprintf("ref_%d", time.Now().Unix()),
+			"merchantTransID":   txID,
 			"merchantTransTime": now,
 		},
 		"transAmount": map[string]interface{}{

@@ -40,10 +40,14 @@ evo-cli provides three layers of commands, from flexible to convenient:
 **Payment:**
 ```bash
 evo-cli payment +pay --amount 100 --currency USD --payment-brand Alipay --return-url https://your-site.com/return
+evo-cli payment +pay --amount 10.00 --currency USD --gateway-token pmt_xxx --auto-capture true
 evo-cli payment +query --merchant-tx-id TX001
 evo-cli payment +capture --original-merchant-tx-id TX001 --amount 100 --currency USD
+evo-cli payment +capture-query --merchant-tx-id CAP001
 evo-cli payment +cancel --original-merchant-tx-id TX001 --yes
+evo-cli payment +cancel-query --merchant-tx-id CAN001
 evo-cli payment +refund --original-merchant-tx-id TX001 --amount 50 --currency USD --yes
+evo-cli payment +refund-query --merchant-tx-id REF001
 ```
 
 **LinkPay:**

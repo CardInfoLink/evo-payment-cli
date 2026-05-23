@@ -27,6 +27,7 @@ func CreateShortcut() shortcuts.Shortcut {
 			{Name: "network-token-only", Desc: "Only create network token, no gateway token (true/false)"},
 			{Name: "allow-authentication", Desc: "Allow 3DS authentication during tokenization (true/false)"},
 			{Name: "return-url", Desc: "Return URL for 3DS authentication redirect"},
+			{Name: "merchant-tx-id", Desc: "Merchant transaction ID (auto-generated if omitted)"},
 		},
 		DryRun: func(ctx context.Context, rt *shortcuts.RuntimeContext) error {
 			path := fmt.Sprintf("/g2/v1/payment/mer/%s/paymentMethod", rt.Config.MerchantSid)
@@ -46,7 +47,11 @@ func CreateShortcut() shortcuts.Shortcut {
 
 func buildCreateBody(rt *shortcuts.RuntimeContext) map[string]interface{} {
 	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
-	txID := fmt.Sprintf("tok_%d", time.Now().Unix())
+	txID := rt.Str("merchant-tx-id")
+	if txID == "" {
+		txID = fmt.Sprintf("tok_%d", time.Now().Unix())
+		rt.Flags["merchant-tx-id"] = txID
+	}
 
 	card := map[string]interface{}{
 		"vaultID": rt.Str("vault-id"),

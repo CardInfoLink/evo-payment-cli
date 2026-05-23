@@ -18,8 +18,11 @@ metadata:
 | [`+pay`](references/evo-payment-pay.md) | Create a payment |
 | [`+query`](references/evo-payment-query.md) | Query payment status |
 | [`+capture`](references/evo-payment-capture.md) | Capture pre-authorized payment |
+| `+capture-query` | Query capture status |
 | [`+cancel`](references/evo-payment-cancel.md) | Cancel a payment (high-risk) |
+| `+cancel-query` | Query cancel status |
 | [`+refund`](references/evo-payment-refund.md) | Refund a payment (high-risk) |
+| `+refund-query` | Query refund status |
 
 ## API Resources
 

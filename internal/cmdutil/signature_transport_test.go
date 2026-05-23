@@ -264,7 +264,32 @@ func TestSignatureTransport_NoIdempotencyKey_POST(t *testing.T) {
 	}
 
 	if got := mock.lastReq.Header.Get("Idempotency-Key"); got != "" {
-		t.Errorf("POST request should not have Idempotency-Key, got %q", got)
+		t.Errorf("POST request without context should not have Idempotency-Key, got %q", got)
+	}
+}
+
+func TestSignatureTransport_IdempotencyKey_POST_WithContext(t *testing.T) {
+	cfg := testConfig()
+	mock := &mockTransport{
+		respFunc: func(req *http.Request) (*http.Response, error) {
+			return buildSignedResponse(req.Method, req.URL.Path, cfg.SignKey.Value, cfg.SignType, `{}`), nil
+		},
+	}
+
+	transport := &SignatureTransport{
+		Base:       mock,
+		ConfigFunc: func() (*core.CliConfig, error) { return cfg, nil },
+	}
+
+	ctx := WithIdempotencyKey(context.Background(), "my-merchant-tx-id")
+	req, _ := http.NewRequestWithContext(ctx, "POST", "https://hkg-online-uat.everonet.com/g2/v1/test", strings.NewReader(`{}`))
+	_, err := transport.RoundTrip(req)
+	if err != nil {
+		t.Fatalf("RoundTrip failed: %v", err)
+	}
+
+	if got := mock.lastReq.Header.Get("Idempotency-Key"); got != "my-merchant-tx-id" {
+		t.Errorf("Idempotency-Key = %q, want %q", got, "my-merchant-tx-id")
 	}
 }
 
